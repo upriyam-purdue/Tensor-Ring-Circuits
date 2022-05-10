@@ -2,6 +2,9 @@ from typing import List, Tuple, Optional
 
 from tensor_ring import Hamiltonian
 
+# NTS: Problem Catalog -- located at path «<proj>/rudy/»
+#  -- https://www-user.tu-chemnitz.de/~helmberg/sdp_software.html
+#  -- https://biqmac.aau.at/biqmaclib.pdf
 
 def create_hamiltonian(num_qubits: int, edge_weights: List[Tuple[Tuple[int, int], float]]) -> Hamiltonian.ListType:
     def _make_edge_tuple(edge: Optional[Tuple[int, int]] = None, /) -> Tuple[bool, ...]:
