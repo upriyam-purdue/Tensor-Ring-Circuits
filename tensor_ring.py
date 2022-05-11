@@ -1,7 +1,7 @@
 from typing import List, Tuple, Optional
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor
 
 from math import e, pi
 
@@ -17,74 +17,8 @@ def _apply_single_qubit_gate(gate_matrix: Tensor, qu_state_tensor: Tensor) -> Te
     return qu_state_tensor
 
 
-def _apply_double_qubit_gate_v1(gate_matrix: Tensor, qu_state_tensors: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
-    """ Apply the specified 2-qubit gate matrix on the specified ring-tensors -- v1 """
-    # gate_matrix: 4 × 4
-    qu0, qu1 = qu_state_tensors
-    # qu0: χ1 × χ2 × 2
-    # qu1: χ2 × χ3 × 2
-
-    chi_1 = qu0.shape[0]
-    chi_3 = qu1.shape[1]
-    # chi_1 = χ1
-    # chi_3 = χ3
-
-    mps = torch.tensordot(qu0, qu1, ([1], [0]))
-    # mps: (χ1 × [χ2] × 2) . ([χ2] × χ3 × 2) = χ1 × 2 × χ3 × 2
-    mps = torch.moveaxis(mps, 2, 1)
-    # mps: χ1 × χ3 × 2 × 2
-
-    gate_tensor = torch.reshape(gate_matrix, (2, 2, 2, 2))
-    # gate_tensor: 2 × 2 × 2 × 2
-
-    mps = torch.tensordot(gate_tensor, mps, ([2, 3], [2, 3]))
-    # mps: (2 × 2 × [2] × [2]) . (χ1 × χ3 × [2] × [2]) = 2 × 2 × χ1 × χ3
-    mps = torch.moveaxis(mps, 1, 2).reshape((chi_1 * 2, chi_3 * 2))
-    # mps: 2 × χ1 × 2 × χ3 --> (2 * χ1) × (2 * χ3)
-
-    x, s, y = torch.linalg.svd(mps)
-    # x: (2 * χ1) × ?
-    # s: ?
-    # y: ? × (2 * χ3)
-
-    # noinspection PyTypeChecker
-    s = torch.diag(s).type(torch.cfloat)
-    # s: ? × ?
-
-    td_x = x.shape[1]  # x: <..> × td_x
-    td_s = s.shape[0]  # s: td_s × td_s
-    td_y = y.shape[0]  # y: td_y × <..>
-
-    # combine x & s appropriately to make mps1
-    if chi_1 <= chi_3:
-        if td_y != td_s:
-            mps1 = torch.matmul(x, torch.cat((s, torch.zeros((td_s, td_y - td_s), dtype=torch.cfloat)), 1))
-        else:
-            mps1 = torch.mm(x, s)
-    else:
-        if td_x != td_s:
-            mps1 = torch.matmul(x, torch.cat((s, torch.zeros((td_x - td_s, td_s), dtype=torch.cfloat)), 0))
-        else:
-            mps1 = torch.mm(x, s)
-    # mps1: (2 * χ1) × χ'
-    mps2 = y
-    # mps2: χ' × (2 * χ3)
-
-    mps1 = mps1.reshape((2, int(mps1.shape[0] / 2), mps1.shape[1]))
-    # mps1: 2 × χ1 × χ'
-    mps2 = mps2.reshape((mps2.shape[0], 2, int(mps2.shape[1] / 2)))
-    # mps2: χ' × 2 × χ3
-
-    qu0 = torch.moveaxis(mps1, 0, 2)
-    # qu0: χ1 × χ' × 2
-    qu1 = torch.moveaxis(mps2, 1, 2)
-    # qu1: χ' × χ3 × 2
-
-    return qu0, qu1
-
-
-def _apply_double_qubit_gate_v2(gate_matrix: Tensor, qu_state_tensors: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
-    """ Apply the specified 2-qubit gate matrix on the specified ring-tensors -- v2 """
+def _apply_double_qubit_gate(gate_matrix: Tensor, qu_state_tensors: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
+    """ Apply the specified 2-qubit gate matrix on the specified ring-tensors """
     # gate_matrix: 4 × 4
     qu0, qu1 = qu_state_tensors
     # qu0: χ1 × χ2 × 2
@@ -134,12 +68,6 @@ def _apply_double_qubit_gate_v2(gate_matrix: Tensor, qu_state_tensors: Tuple[Ten
     # qu1: χ3 × χ3 × 2
 
     return qu0, qu1
-
-
-def _apply_double_qubit_gate(gate_matrix: Tensor, qu_state_tensors: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
-    """ Apply the specified 2-qubit gate matrix on the specified ring-tensors """
-    # return _apply_double_qubit_gate_v1(gate_matrix, qu_state_tensors)
-    return _apply_double_qubit_gate_v2(gate_matrix, qu_state_tensors)
 
 
 # noinspection PyPep8Naming
