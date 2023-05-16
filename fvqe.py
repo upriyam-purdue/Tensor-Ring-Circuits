@@ -11,15 +11,74 @@ from time import perf_counter
 from random import random
 
 # globals
-_NUM_QUBITS: Final[int] = 4
+_NUM_QUBITS: Final[int] = 31
 _CIRCUIT_BLOCK_DEPTH: Final[int] = 1
 
 _HAMILTONIAN: Hamiltonian = Hamiltonian(create_hamiltonian(_NUM_QUBITS, [
-    ((0, 1), 5.0),
-    ((0, 2), 3.0),
-    ((1, 3), 1.0),
-    ((2, 4), 5.0),
-    ((3, 4), 7.0)
+    ((0, 6), 1),
+    ((0, 20), 9),
+    ((0, 21), 1),
+    ((0, 26), 5),
+    ((1, 8), 1),
+    ((1, 18), 8),
+    ((1, 19), 9),
+    ((1, 30), 3),
+    ((2, 17), 1),
+    ((2, 20), 6),
+    ((2, 22), 9),
+    ((2, 31), 2),
+    ((3, 10), 6),
+    ((3, 14), 10),
+    ((3, 15), 10),
+    ((3, 17), 10),
+    ((4, 18), 9),
+    ((4, 20), 6),
+    ((4, 25), 4),
+    ((4, 30), 1),
+    ((5, 9), 9),
+    ((5, 13), 3),
+    ((5, 29), 5),
+    ((5, 30), 1),
+    ((6, 8), 8),
+    ((6, 17), 10),
+    ((6, 23), 9),
+    ((7, 9), 2),
+    ((7, 13), 3),
+    ((7, 14), 9),
+    ((7, 28), 2),
+    ((8, 10), 5),
+    ((8, 25), 5),
+    ((9, 20), 9),
+    ((9, 29), 5),
+    ((10, 11), 1),
+    ((10, 29), 2),
+    ((11, 13), 8),
+    ((11, 16), 8),
+    ((11, 30), 2),
+    ((12, 18), 8),
+    ((12, 19), 9),
+    ((12, 23), 8),
+    ((12, 29), 8),
+    ((13, 25), 6),
+    ((14, 21), 3),
+    ((14, 28), 5),
+    ((15, 19), 4),
+    ((15, 23), 1),
+    ((15, 27), 9),
+    ((16, 17), 6),
+    ((16, 26), 10),
+    ((16, 28), 7),
+    ((18, 19), 3),
+    ((21, 26), 10),
+    ((21, 31), 10),
+    ((22, 23), 1),
+    ((22, 25), 6),
+    ((22, 27), 1),
+    ((24, 26), 1),
+    ((24, 27), 7),
+    ((24, 28), 3),
+    ((24, 31), 7),
+    ((27, 31), 10),
 ]))
 
 # tensor ring
@@ -147,7 +206,7 @@ def _adjust_params() -> None:
         for ind in range(_NUM_FVQE_PARAMETERS):
             _FVQE_PARAMETERS[ind] = orig_params[ind]
 
-    gradient = _compute_gradient(use_filtering_scaling=True)
+    gradient = _compute_gradient(use_filtering_scaling=False)
     assert len(gradient) == _NUM_FVQE_PARAMETERS
 
     def _update_params(learning_rate: float) -> None:
@@ -196,7 +255,7 @@ def _test_circuit_training():
 
     time_tot = 0
     # repeated training iterations
-    for iteration in range(100):
+    for iteration in range(5):
         start_time = perf_counter()
         _adjust_params()
         end_time = perf_counter()
